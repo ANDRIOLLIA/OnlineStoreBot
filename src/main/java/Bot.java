@@ -46,7 +46,6 @@ public class Bot extends TelegramLongPollingBot {
             .build();
 
 
-
     private InlineKeyboardButton buttonForLiquidCollagen = InlineKeyboardButton.builder()
             .text("Жидкий коллаген")
             .callbackData("жидкий коллаген")
@@ -70,10 +69,32 @@ public class Bot extends TelegramLongPollingBot {
             .text("Kinohimitsu Collagen Men 5300 16's питьевой")
             .callbackData("Kinohimitsu Collagen Men 5300 16")
             .build();
+    private InlineKeyboardButton buttonForMadrexCollagen20000PlusDrink = InlineKeyboardButton.builder()
+            .text("Madrex Collagen 20000 Plus жидкий коллаген")
+            .callbackData("Madrex Collagen 20000 Plus")
+            .build();
+    private InlineKeyboardButton buttonForRoyagenCollagenKijunDrink12000Drink = InlineKeyboardButton.builder()
+            .text("Royagen Collagen Kijun Drink 12000 мг")
+            .callbackData("Royagen Collagen Kijun Drink 12000")
+            .build();
+    private InlineKeyboardButton buttonForYoungLivingBLOOMCollagenCompleteDrink = InlineKeyboardButton.builder()
+            .text("Young Living BLOOM Collagen Complete")
+            .callbackData("Young Living BLOOM Collagen Complete")
+            .build();
+    private InlineKeyboardButton buttonForDrOhhiraOMXPlusCollagenDrink = InlineKeyboardButton.builder()
+            .text("Dr.Ohhira OM-X Plus Collagen")
+            .callbackData("Dr.Ohhira OM-X Plus Collagen")
+            .build();
 
     private InlineKeyboardMarkup keyboardForLiquidCollagen = InlineKeyboardMarkup.builder()
             .keyboardRow(List.of(buttonForKinohimitsuCollagenMen530016sDrink))
+            .keyboardRow(List.of(buttonForMadrexCollagen20000PlusDrink))
+            .keyboardRow(List.of(buttonForRoyagenCollagenKijunDrink12000Drink))
+            .keyboardRow(List.of(buttonForYoungLivingBLOOMCollagenCompleteDrink))
+            .keyboardRow(List.of(buttonForDrOhhiraOMXPlusCollagenDrink))
+            .keyboardRow(List.of(buttonForReturnMenu))
             .build();
+
     @Override
     public void onUpdateReceived(Update update) {
         forWorkWithText(update);
@@ -102,8 +123,8 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    public void forWorkWithButtons(Update update){
-        if(update.hasCallbackQuery()){
+    public void forWorkWithButtons(Update update) {
+        if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
             Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
@@ -125,8 +146,8 @@ public class Bot extends TelegramLongPollingBot {
                     .messageId(messageId)
                     .build();
 
-            if(callbackData.equals(buttonForStartTgBot.getCallbackData()) ||
-                    callbackData.equals(buttonForReturnMenu.getCallbackData())){
+            if (callbackData.equals(buttonForStartTgBot.getCallbackData()) ||
+                    callbackData.equals(buttonForReturnMenu.getCallbackData())) {
                 editMessageText.setText("Выберите пункт меню:");
                 editMessageReplyMarkup.setReplyMarkup(keyboardForMenu);
             } else if (callbackData.equals(buttonForCategories.getCallbackData())) {
@@ -142,9 +163,9 @@ public class Bot extends TelegramLongPollingBot {
                                 new File("src/main/resources/data/Collagen-Men-5300-16s.jpg")
                         )
                 );
-                try{
+                try {
                     execute(sendPhoto);
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     System.out.println(ex.getMessage());
                 }
             }
@@ -152,7 +173,7 @@ public class Bot extends TelegramLongPollingBot {
             try {
                 execute(editMessageText);
                 execute(editMessageReplyMarkup);
-            }catch (Exception ex) {
+            } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
         }
