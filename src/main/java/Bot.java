@@ -1,5 +1,6 @@
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendMediaBotMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -10,90 +11,104 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.io.File;
-import java.security.PublicKey;
+import java.io.FileWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Bot extends TelegramLongPollingBot {
-    //Кнопка для запуска теста
-    private InlineKeyboardButton buttonForStartTgBot = InlineKeyboardButton.builder()
-            .text("Запустить")
-            .callbackData("запуск")
+    //Map для хранения товаров каждого клиента
+
+    //URL категории жидкого коллагена
+    private String urlWebPageWithLiquidCategoryCollagen = "https://kollagen.life/product-category/pitevoj-kollagen";
+    //Путь к файлу с html-кодом 
+    private String pathToFileWithHtmlCode = "src/main/resources/data/htmlCodeWebPage.html";
+    //Название текущего коллагена
+    String currentNameCollagen = "";
+    //Цена текущего коллагена
+    int currentPriceCollagen = 0;
+
+    //Кнопка для добавления товара в корзину
+    private InlineKeyboardButton buttonForAddCollagenInBasket = InlineKeyboardButton.builder()
+            .text("Добавить в корзину")
+            .callbackData("добавить в корзину")
+            .build();
+    //Кнопка для возврата назад
+    private InlineKeyboardButton buttonForReturnBack = InlineKeyboardButton.builder()
+            .text("Вернуться на главную")
+            .callbackData("вернуться на главную")
+            .build();
+    //Клавиатура для кнопки для добавления товара в корзину
+    private InlineKeyboardMarkup keyboardForButtonForAddCollagenInBasket = InlineKeyboardMarkup.builder()
+            .keyboardRow(List.of(buttonForAddCollagenInBasket))
+            //.keyboardRow(List.of(buttonForReturnBack))
             .build();
 
-    //Клавиатура
+    //Кнопка для запуска тг-бота
+    private InlineKeyboardButton buttonForStartTgBot = InlineKeyboardButton.builder()
+            .text("Запуск")
+            .callbackData("запуск")
+            .build();
+    //Клавиатура для кнопки для запуска тг-бота
     private InlineKeyboardMarkup keyboardForButtonForStartTgBot = InlineKeyboardMarkup.builder()
             .keyboardRow(List.of(buttonForStartTgBot))
             .build();
 
-    private InlineKeyboardButton buttonForReturnMenu = InlineKeyboardButton.builder()
-            .text("Вернуться на главное меню")
-            .callbackData("вернуться на главное меню")
+    //Кнопка для вывода всех товаров
+    private InlineKeyboardButton buttonForGetListItems = InlineKeyboardButton.builder()
+            .text("Посмотреть все товары")
+            .callbackData("посмотреть все товары")
             .build();
-
-
-    private InlineKeyboardButton buttonForCategories = InlineKeyboardButton.builder()
-            .text("Перейти в категории")
-            .callbackData("категории")
-            .build();
+    //Кнопка для вывода всех товаров
     private InlineKeyboardButton buttonForMyBasket = InlineKeyboardButton.builder()
             .text("Моя корзина")
             .callbackData("моя корзина")
             .build();
-
-    private InlineKeyboardMarkup keyboardForMenu = InlineKeyboardMarkup.builder()
-            .keyboardRow(List.of(buttonForCategories))
+    //Клавиатура для кнопки для вывода всех товаров
+    private InlineKeyboardMarkup keyboardForButtonForGetListItems = InlineKeyboardMarkup.builder()
+            .keyboardRow(List.of(buttonForGetListItems))
             .keyboardRow(List.of(buttonForMyBasket))
             .build();
 
-
+    //Кнопка для категории жидкого коллагена
     private InlineKeyboardButton buttonForLiquidCollagen = InlineKeyboardButton.builder()
-            .text("Жидкий коллаген")
+            .text("Питьевой жидкий коллаген")
             .callbackData("жидкий коллаген")
             .build();
+    //Кнопка для категории коллагена в порошке
     private InlineKeyboardButton buttonForPowderCollagen = InlineKeyboardButton.builder()
-            .text("Коллаген в попрошке")
+            .text("Коллаген в порошке")
             .callbackData("коллаген в порошке")
             .build();
-    private InlineKeyboardButton buttonForTabletsCollagen = InlineKeyboardButton.builder()
+    //Кнопка для категории таблетированного коллагена
+    private InlineKeyboardButton buttonForTabletCollagen = InlineKeyboardButton.builder()
             .text("Коллаген в таблетках")
             .callbackData("коллаген в таблетках")
             .build();
-    private InlineKeyboardMarkup keyboardForAllCategories = InlineKeyboardMarkup.builder()
+    //Клавиатура для кнопки для вывода всех категорий товаров
+    private InlineKeyboardMarkup keyboardForButtonForAllCategories = InlineKeyboardMarkup.builder()
             .keyboardRow(List.of(buttonForLiquidCollagen))
             .keyboardRow(List.of(buttonForPowderCollagen))
-            .keyboardRow(List.of(buttonForTabletsCollagen))
-            .keyboardRow(List.of(buttonForReturnMenu))
+            .keyboardRow(List.of(buttonForTabletCollagen))
+            .keyboardRow(List.of(buttonForReturnBack))
             .build();
 
-    private InlineKeyboardButton buttonForKinohimitsuCollagenMen530016sDrink = InlineKeyboardButton.builder()
-            .text("Kinohimitsu Collagen Men 5300 16's питьевой")
-            .callbackData("Kinohimitsu Collagen Men 5300 16")
+    //Кнопка для коллагена DHC 12000mg
+    private InlineKeyboardButton buttonForСollagenDHC12000 = InlineKeyboardButton.builder()
+            .text("DHC коллаген 12000mg питьевой 50 мл x 10")
+            .callbackData("жидкий коллаген DHC 12000mg")
             .build();
-    private InlineKeyboardButton buttonForMadrexCollagen20000PlusDrink = InlineKeyboardButton.builder()
-            .text("Madrex Collagen 20000 Plus жидкий коллаген")
-            .callbackData("Madrex Collagen 20000 Plus")
+    private InlineKeyboardButton buttonForCollagenShiseidoRelacle = InlineKeyboardButton.builder()
+            .text("Collagen Shiseido Relacle желе")
+            .callbackData("Collagen Shiseido Relacle желе")
             .build();
-    private InlineKeyboardButton buttonForRoyagenCollagenKijunDrink12000Drink = InlineKeyboardButton.builder()
-            .text("Royagen Collagen Kijun Drink 12000 мг")
-            .callbackData("Royagen Collagen Kijun Drink 12000")
-            .build();
-    private InlineKeyboardButton buttonForYoungLivingBLOOMCollagenCompleteDrink = InlineKeyboardButton.builder()
-            .text("Young Living BLOOM Collagen Complete")
-            .callbackData("Young Living BLOOM Collagen Complete")
-            .build();
-    private InlineKeyboardButton buttonForDrOhhiraOMXPlusCollagenDrink = InlineKeyboardButton.builder()
-            .text("Dr.Ohhira OM-X Plus Collagen")
-            .callbackData("Dr.Ohhira OM-X Plus Collagen")
+    //Клавиатура для кнопки для коллагена DHC 12000mg
+    private InlineKeyboardMarkup keyboardForButtonForLiquidCollagen = InlineKeyboardMarkup.builder()
+            .keyboardRow(List.of(buttonForСollagenDHC12000))
+            .keyboardRow(List.of(buttonForCollagenShiseidoRelacle))
+            .keyboardRow(List.of(buttonForReturnBack))
             .build();
 
-    private InlineKeyboardMarkup keyboardForLiquidCollagen = InlineKeyboardMarkup.builder()
-            .keyboardRow(List.of(buttonForKinohimitsuCollagenMen530016sDrink))
-            .keyboardRow(List.of(buttonForMadrexCollagen20000PlusDrink))
-            .keyboardRow(List.of(buttonForRoyagenCollagenKijunDrink12000Drink))
-            .keyboardRow(List.of(buttonForYoungLivingBLOOMCollagenCompleteDrink))
-            .keyboardRow(List.of(buttonForDrOhhiraOMXPlusCollagenDrink))
-            .keyboardRow(List.of(buttonForReturnMenu))
-            .build();
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -103,22 +118,25 @@ public class Bot extends TelegramLongPollingBot {
 
     public void forWorkWithText(Update update) {
         if (update.hasMessage()) {
-            String text = update.getMessage().getText();
-            Long idUser = update.getMessage().getFrom().getId();
+            String userId = update.getMessage().getFrom().getId().toString();
             SendMessage sendMessage = SendMessage.builder()
-                    .chatId(idUser)
+                    .chatId(userId)
                     .text("")
                     .build();
 
+            String text = update.getMessage().getText();
             if (text.equals("/start")) {
-                sendMessage.setText("Вас приветствует интернет-магазин!");
+                sendMessage.setText(
+                        "Добро пожаловать!\n" +
+                                "Вас приветствует телеграмм-бот\n" +
+                                "нашего интернет-магазина :)");
                 sendMessage.setReplyMarkup(keyboardForButtonForStartTgBot);
             }
-            try {
 
+            try {
                 execute(sendMessage);
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                ex.getMessage();
             }
         }
     }
@@ -129,54 +147,88 @@ public class Bot extends TelegramLongPollingBot {
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
             Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
 
-            //Для отправки сообщений
+            //Для отправки текста
             EditMessageText editMessageText = EditMessageText.builder()
                     .chatId(chatId)
                     .messageId(messageId)
                     .text("")
                     .build();
-
-            //Для отправки фотографий
-            SendPhoto sendPhoto = new SendPhoto();
-            sendPhoto.setChatId(chatId);
-
-            //Для отправки клавиатуры
+            //Для отправки клавиатур с кнопками
             EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder()
                     .chatId(chatId)
                     .messageId(messageId)
                     .build();
+            //Для отправки фотографий
+            SendPhoto sendPhoto = new SendPhoto();
+            sendPhoto.setChatId(chatId);
 
             if (callbackData.equals(buttonForStartTgBot.getCallbackData()) ||
-                    callbackData.equals(buttonForReturnMenu.getCallbackData())) {
-                editMessageText.setText("Выберите пункт меню:");
-                editMessageReplyMarkup.setReplyMarkup(keyboardForMenu);
-            } else if (callbackData.equals(buttonForCategories.getCallbackData())) {
+                    callbackData.equals(buttonForReturnBack.getCallbackData())) {
+                editMessageText.setText("Выберите одну из команд:");
+                editMessageReplyMarkup.setReplyMarkup(keyboardForButtonForGetListItems);
+            } else if (callbackData.equals(buttonForGetListItems.getCallbackData())) {
                 editMessageText.setText("Выберите категорию товаров");
-                editMessageReplyMarkup.setReplyMarkup(keyboardForAllCategories);
+                editMessageReplyMarkup.setReplyMarkup(keyboardForButtonForAllCategories);
             } else if (callbackData.equals(buttonForLiquidCollagen.getCallbackData())) {
-                editMessageText.setText("Выберите товар:");
-                editMessageReplyMarkup.setReplyMarkup(keyboardForLiquidCollagen);
-            } else if (callbackData.equals(buttonForKinohimitsuCollagenMen530016sDrink.getCallbackData())) {
-                sendPhoto.setCaption(buttonForKinohimitsuCollagenMen530016sDrink.getText());
-                sendPhoto.setPhoto(
-                        new InputFile(
-                                new File("src/main/resources/data/Collagen-Men-5300-16s.jpg")
-                        )
-                );
-                try {
-                    execute(sendPhoto);
-                } catch (Exception ex) {
-                    System.out.println(ex.getMessage());
-                }
+                editMessageText.setText("Питьевой коллаген");
+                editMessageReplyMarkup.setReplyMarkup(keyboardForButtonForLiquidCollagen);
+            } else if (callbackData.equals(buttonForСollagenDHC12000.getCallbackData())) {
+                currentPriceCollagen = forGetPriceCollagenWithSelectedCategory(buttonForСollagenDHC12000.getText(), urlWebPageWithLiquidCategoryCollagen);
+                currentNameCollagen = buttonForСollagenDHC12000.getText();
+                sendPhoto.setCaption(currentNameCollagen + " за " + currentPriceCollagen + " руб.");
+                sendPhoto.setPhoto(new InputFile(new File("src/main/resources/data/dhc12000.jpg")));
+                sendPhoto.setReplyMarkup(keyboardForButtonForAddCollagenInBasket);
+            }
+            else if (callbackData.equals(buttonForCollagenShiseidoRelacle.getCallbackData())) {
+                currentPriceCollagen = forGetPriceCollagenWithSelectedCategory(buttonForCollagenShiseidoRelacle.getText(), urlWebPageWithLiquidCategoryCollagen);
+                currentNameCollagen = buttonForCollagenShiseidoRelacle.getText();
+                sendPhoto.setCaption(currentNameCollagen + " за " + currentPriceCollagen + " руб.");
+                sendPhoto.setPhoto(new InputFile(new File("src/main/resources/data/heseido_relacle_collagen_pitevoy.jpg")));
+                sendPhoto.setReplyMarkup(keyboardForButtonForAddCollagenInBasket);
+            } else if (callbackData.equals(buttonForMyBasket.getCallbackData())) {
+
             }
 
+            String strSendPhoto = String.valueOf(sendPhoto);
+            System.out.println("Send photo: " + strSendPhoto);
+            int leftIndexForCaption = strSendPhoto.indexOf("caption=") + "caption=".length();
+            int rightIndexForCaption = strSendPhoto.indexOf(",", leftIndexForCaption);
+            String caption = strSendPhoto.substring(leftIndexForCaption, rightIndexForCaption);
+            String availablePhoto = caption.equals("null") ? "нет" : "да";
+            System.out.println("Наличие фотографии: " + availablePhoto);
+            if (callbackData.equals(buttonForAddCollagenInBasket.getCallbackData())) {
+                Collagen currentCollagen = new Collagen(currentNameCollagen, currentPriceCollagen);
+            }
             try {
+                if (!caption.equals("null")) {
+                    execute(sendPhoto);
+                    System.out.println("Отправка фотки");
+                }
+
                 execute(editMessageText);
+                System.out.println("Отправка текста");
+
                 execute(editMessageReplyMarkup);
+                System.out.println("Отправка клавы");
+
+                System.out.println("Все отправления прошли!\n");
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                ex.getMessage();
             }
         }
+    }
+
+    public int forGetPriceCollagenWithSelectedCategory(String captionCollagen, String urlWebPageWithCategoryCollagen) {
+        int priceCollagen = 0;
+        try {
+            Document document = Jsoup.connect(urlWebPageWithLiquidCategoryCollagen).get();
+            String strHtmlCode = String.valueOf(document);
+
+            FileWriter fileWriter = new FileWriter(pathToFileWithHtmlCode);
+        } catch (Exception ex) {
+            ex.getMessage();
+        }
+        return priceCollagen;
     }
 
     @Override
