@@ -1,5 +1,7 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -225,6 +227,10 @@ public class Bot extends TelegramLongPollingBot {
             String strHtmlCode = String.valueOf(document);
 
             FileWriter fileWriter = new FileWriter(pathToFileWithHtmlCode);
+            Elements elements = document.select(".jet-woo-products__inner-box");
+            for(Element currentElement : elements){
+                System.out.println("Current Element\"" + currentElement + "\"\n");
+            }
         } catch (Exception ex) {
             ex.getMessage();
         }
